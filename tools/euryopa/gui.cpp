@@ -186,13 +186,13 @@ LoadInitialAntialiasingSettings(void)
 static int
 getCustomImportPreferredStartId(void)
 {
-	return isIII() ? gCustomImportPreferredStartIdIII : gCustomImportPreferredStartId;
+	return (isIII() || isVC()) ? gCustomImportPreferredStartIdIII : gCustomImportPreferredStartId;
 }
 
 static void
 setCustomImportPreferredStartId(int id)
 {
-	if(isIII())
+	if(isIII() || isVC())
 		gCustomImportPreferredStartIdIII = id;
 	else
 		gCustomImportPreferredStartId = id;
@@ -201,7 +201,7 @@ setCustomImportPreferredStartId(int id)
 static int
 getDefaultCustomImportStartId(void)
 {
-	return isIII() ? 2000 : (isSA() ? 18631 : 0);
+	return (isIII() || isVC()) ? 2000 : (isSA() ? 18631 : 0);
 }
 
 static void
@@ -4193,9 +4193,9 @@ finalizeCustomImport(void)
 	gCustomImport.error[0] = '\0';
 	gCustomImport.warning[0] = '\0';
 
-	if(!isSA() && !isIII()){
+	if(!isSA() && !isIII() && !isVC()){
 		snprintf(gCustomImport.error, sizeof(gCustomImport.error),
-		         "Custom import is wired for GTA III and San Andreas only in this v1.");
+		         "Custom import is wired for GTA III, Vice City, and San Andreas only in this v1.");
 		return false;
 	}
 	if(gCustomImport.objectId < 0){
@@ -4376,7 +4376,7 @@ finalizeCustomImport(void)
 	char ideEntry[512];
 	gCustomImport.previewObj.m_drawDist[0] = gCustomImport.drawDist;
 	int ideFlags = computeFlagsFromObjectDef(&gCustomImport.previewObj);
-	if(isIII()){
+	if(isIII() || isVC()){
 		snprintf(ideEntry, sizeof(ideEntry), "%d, %s, %s, 1, %.1f, %d",
 		         gCustomImport.objectId, gCustomImport.modelName, gCustomImport.txdName,
 		         gCustomImport.drawDist, ideFlags);
@@ -4456,7 +4456,7 @@ finalizeCustomImport(void)
 		std::vector<char> generatedCol;
 		char autoColError[256];
 		autoColError[0] = '\0';
-		bool colOk = isIII() ?
+		bool colOk = (isIII() || isVC()) ?
 			GenerateCol1FromAtomic(obj->m_atomics[0], gCustomImport.modelName, generatedCol, &stats, autoColError, sizeof(autoColError)) :
 			GenerateCol3FromAtomic(obj->m_atomics[0], gCustomImport.modelName, generatedCol, &stats, autoColError, sizeof(autoColError));
 		if(!colOk || !writeFileExact(colTarget, generatedCol.data(), generatedCol.size())){
@@ -4628,10 +4628,12 @@ uiCustomImportPopup(void)
 
 	ImGui::Separator();
 	ImGui::InputInt("Object ID", &gCustomImport.objectId);
-	int previousPreferredStartId = gCustomImportPreferredStartId;
-	ImGui::InputInt("Preferred ID Start", &gCustomImportPreferredStartId);
+	int previousPreferredStartId = getCustomImportPreferredStartId();
+	int preferredStartId = previousPreferredStartId;
+	ImGui::InputInt("Preferred ID Start", &preferredStartId);
+	setCustomImportPreferredStartId(preferredStartId);
 	sanitizeCustomImportSettings();
-	if(gCustomImportPreferredStartId != previousPreferredStartId)
+	if(getCustomImportPreferredStartId() != previousPreferredStartId)
 		saveSaveSettings();
 	ImGui::SameLine();
 	if(ImGui::Button("Suggest Free ID"))
