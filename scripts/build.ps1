@@ -55,6 +55,12 @@ if (-not (Test-Path -LiteralPath $LibrwPath -PathType Container))
 }
 $LibrwPath = (Resolve-Path -LiteralPath $LibrwPath).Path
 
+$backend = Join-Path $LibrwPath 'skeleton\imgui\backends\imgui_impl_win32.cpp'
+if (-not (Test-Path -LiteralPath $backend))
+{
+    throw "librw at $LibrwPath lacks skeleton\imgui\backends. Check out the ariane branch at the LIBRW_REF commit pinned in .github\workflows\build-euryopa.yml."
+}
+
 [System.Environment]::SetEnvironmentVariable('LIBRW', $LibrwPath, 'User')
 $env:LIBRW = $LibrwPath
 
